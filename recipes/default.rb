@@ -37,16 +37,15 @@ if config[:create_key]
   end
       
   execute :ssh_keygen do
-    remote = config[:remote]
+    remote = config[:remote].to_hash.merge(search(:github_keys, "id:remote").first || { })
     user  user
     group user
     command <<-EOCMD
              ssh-keygen -f #{identity} -t dsa -N ''
              KEY=$(cat #{identity}.pub)
-             curl -X POST -L --user #{remote[:user]}:#{remote[:password]} #{api} --data "{\\"title\\":\\"#{remote[:key][:name]}\\", \\"key\\":\\"$KEY\\"}"
+             curl -X POST -L --user #{remote['user']}:#{remote['password']} #{api} --data "{\\"title\\":\\"#{remote['key']['name']}\\", \\"key\\":\\"$KEY\\"}"
 EOCMD
     creates "#{identity}"
     action :run
   end
-  
 end

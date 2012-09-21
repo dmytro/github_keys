@@ -25,12 +25,12 @@ Attributes
 * default.github_keys.local.identity = "github_key_installer" - file name for the SSH key.
 
 
-Usage
-=====
-
+JSON configurarion
+------------------
 
 Add to `deploy.json` file section that overwrites defaults:
 
+````
     "github_keys" : {
         "local" : {
             "user" : "ubuntu"
@@ -45,6 +45,28 @@ Add to `deploy.json` file section that overwrites defaults:
     ...
         "recipe[github_keys]",
         ]
+````
+
+Data bags
+---------
+
+Remote user name and password attibutes can also be overriden by data bag. 
+
+Data bag name must be `github_keys` and have an id `remote`.
+
+This cookbook can be used with chef-solo. In this case data bags must be provided as files, and please make sure to include "chef-solo-search":https://github.com/edelight/chef-solo-search.git cookbook in your library.
+
+## Example databag
+
+````
+{ 
+  "id" : "remote",
+    "user" : "github-user",
+    "password" : "SECRET"
+}
+````
+
+
 
 License
 =======
