@@ -52,16 +52,16 @@ end
 
 execute :ssh_key_upload do
   remote = config[:remote].to_hash.merge(search(:github_keys, "id:remote").first || { })
+  flag = "#{identity}.uploaded"
   user  user
   group user
   command <<-EOCMD
              KEY=$(cat #{identity}.pub)
              curl -X POST -L --user #{remote['user']}:#{remote['password']} #{api} --data "{\\"title\\":\\"#{remote['key']['name']}\\", \\"key\\":\\"$KEY\\"}"
-             echo "title: #{remote['key']['name']}" > "#{identity}.uploaded"
+             echo "title: #{remote['key']['name']}" > #{flag}
 EOCMD
   action :run
-  creates "#{identity}.uploaded"
+  creates flag
   only_if config[:upload_key]
-  end
-
 end
+
