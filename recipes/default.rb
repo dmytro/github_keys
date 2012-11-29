@@ -59,6 +59,7 @@ execute :ssh_key_upload do
              KEY=$(cat #{identity}.pub)
              curl -X POST -L --user #{remote['user']}:#{remote['password']} #{api} --data "{\\"title\\":\\"#{remote['key']['name']}\\", \\"key\\":\\"$KEY\\"}"
              echo "title: #{remote['key']['name']}" > #{flag}
+             echo "user:  #{remote['user']}" >> #{flag}
 EOCMD
   action :run
   creates flag
