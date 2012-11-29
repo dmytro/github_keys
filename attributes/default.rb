@@ -1,6 +1,7 @@
 require 'date'
 
 default.github_keys.create_key = true
+default.github_keys.upload_key = true
 
 default.github_keys.remote.user = "github-user"
 default.github_keys.remote.password = "SECRET"

@@ -19,33 +19,49 @@
 
 config = node[:github_keys]
 api    = 'https://api.github.com/user/keys'
+user = config[:local][:user]
+home = File.expand_path("~#{config[:local][:user]}") 
 
-if config[:create_key]
-  
-  user = config[:local][:user]
-  home = File.expand_path("~#{config[:local][:user]}") 
-  
-  # Full UNIX PATH to ssh key file
-  identity = File.join( home,".ssh", config[:local][:identity] )
-  
-  directory  File.expand_path("#{home}/.ssh") do
-    owner user
-    group user
-    mode 0700
-    action :create
-    recursive true
-  end
-      
-  execute :ssh_keygen do
-    remote = config[:remote].to_hash.merge(search(:github_keys, "id:remote").first || { })
-    user  user
-    group user
-    command <<-EOCMD
-             ssh-keygen -f #{identity} -t dsa -N ''
+directory  File.expand_path("#{home}/.ssh") do
+  owner user
+  group user
+  mode 0700
+  action :create
+  recursive true
+end
+
+execute :scan_github_ssh_keys do
+  cwd home
+  user user
+  command "ssh-keygen -R github.com > /dev/null 2>&1 ; ssh-keyscan -t rsa,dsa github.com >> #{home}/.ssh/known_hosts"
+  action :run
+end
+
+# Full UNIX PATH to ssh key file
+identity = File.join( home,".ssh", config[:local][:identity] )
+
+execute :ssh_keygen do
+  user  user
+  group user
+  command "ssh-keygen -f #{identity} -t dsa -N ''"
+  creates "#{identity}"
+  action :run
+  only_if config[:create_key]
+end
+
+
+execute :ssh_key_upload do
+  remote = config[:remote].to_hash.merge(search(:github_keys, "id:remote").first || { })
+  user  user
+  group user
+  command <<-EOCMD
              KEY=$(cat #{identity}.pub)
              curl -X POST -L --user #{remote['user']}:#{remote['password']} #{api} --data "{\\"title\\":\\"#{remote['key']['name']}\\", \\"key\\":\\"$KEY\\"}"
+             echo "title: #{remote['key']['name']}" > "#{identity}.uploaded"
 EOCMD
-    creates "#{identity}"
-    action :run
+  action :run
+  creates "#{identity}.uploaded"
+  only_if config[:upload_key]
   end
+
 end
