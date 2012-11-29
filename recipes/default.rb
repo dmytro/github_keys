@@ -46,7 +46,7 @@ execute :ssh_keygen do
   command "ssh-keygen -f #{identity} -t dsa -N ''"
   creates "#{identity}"
   action :run
-  only_if config[:create_key]
+  only_if { config[:create_key] }
 end
 
 
@@ -62,6 +62,6 @@ execute :ssh_key_upload do
 EOCMD
   action :run
   creates flag
-  only_if config[:upload_key]
+  only_if { config[:upload_key] }
 end
 
