@@ -63,9 +63,22 @@ execute :ssh_key_upload do
   group user
   command <<-EOCMD
              KEY=$(cat #{identity}.pub)
-             curl -X POST -L --user #{remote['user']}:#{remote['password']} #{api} --data "{\\"title\\":\\"#{remote['key']}\\", \\"key\\":\\"$KEY\\"}"
-             echo "title: #{remote['key']}" > #{flag}
-             echo "user:  #{remote['user']}" >> #{flag}
+             TEMP=$(mktemp -t github-keys-XXX)
+             STATUS=$(curl -X POST -i -L --silent --user #{remote['user']}:#{remote['password']} #{api} --data "{\\"title\\":\\"#{remote['key']}\\", \\"key\\":\\"$KEY\\"}" | tee $TEMP | awk '$1 ~ /Status:/ {print $2}' )
+
+             if [ $STATUS = 201 ]; then
+                 echo "title: #{remote['key']}" > #{flag}
+                 echo "user:  #{remote['user']}" >> #{flag}
+             else
+                 echo "**** GitHUB keys: Failed to install keys ****"
+                 echo "********************** curl output: *********"
+                 cat $TEMP
+                 echo "********************** end output: *********"
+                 rm -r $TEMP
+                 exit 1
+             fi
+             rm -f $TEMP
+
 EOCMD
   action :run
   creates flag
