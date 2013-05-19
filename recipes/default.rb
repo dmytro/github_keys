@@ -17,6 +17,8 @@
 # limitations under the License.
 #
 
+require 'pp'
+
 config = node[:github_keys]
 api    = 'https://api.github.com/user/keys'
 user = config[:local][:user]
@@ -51,14 +53,18 @@ end
 
 
 execute :ssh_key_upload do
-  remote = config[:remote].to_hash.merge(search(:github_keys, "id:remote").first || { })
+  remote = config[:remote].to_hash #.merge(search(:github_keys, "id:remote").first || { })
+  github_user = data_bag('github_keys').first || { }
+
+  pp github_user
+
   flag = "#{identity}.uploaded"
   user  user
   group user
   command <<-EOCMD
              KEY=$(cat #{identity}.pub)
-             curl -X POST -L --user #{remote['user']}:#{remote['password']} #{api} --data "{\\"title\\":\\"#{remote['key']['name']}\\", \\"key\\":\\"$KEY\\"}"
-             echo "title: #{remote['key']['name']}" > #{flag}
+             curl -X POST -L --user #{remote['user']}:#{remote['password']} #{api} --data "{\\"title\\":\\"#{remote['key']}\\", \\"key\\":\\"$KEY\\"}"
+             echo "title: #{remote['key']}" > #{flag}
              echo "user:  #{remote['user']}" >> #{flag}
 EOCMD
   action :run
