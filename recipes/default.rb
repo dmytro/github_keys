@@ -53,10 +53,18 @@ end
 
 
 execute :ssh_key_upload do
-  remote = config[:remote].to_hash #.merge(search(:github_keys, "id:remote").first || { })
-  github_user = data_bag('github_keys').first || { }
+  #
+  # TODO: Search functionality
+  # 
+  # * http://tickets.opscode.com/browse/CHEF-3944 Data bag search
+  # * functionality is not working with Chef 11 at this time.
+  #
+  # remote = config[:remote].to_hash.merge(search(:github_keys, "id:remote").first || { })
 
-  pp github_user
+  remote = config[:remote].to_hash
+  github_user = data_bag_item('github_keys', 'remote').to_hash rescue { }
+
+  remote.merge! github_user
 
   flag = "#{identity}.uploaded"
   user  user
